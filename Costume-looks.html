@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APP IP Costumes</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Fredoka font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #2563eb;
+            --brand-yellow: #ffda00;
+            --card-radius: 1.5rem;
+        }
+
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: var(--brand-yellow);
+            color: #1f2937;
+            min-height: 100vh;
+        }
+
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-card {
+            background: white;
+            border-radius: var(--card-radius);
+            padding: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .section-header {
+            border-left: 8px solid var(--primary-blue);
+            padding-left: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .image-frame {
+            width: 100%;
+            aspect-ratio: 9 / 16;
+            background-color: #f8fafc;
+            border: 3px dashed #cbd5e1;
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .image-frame:hover {
+            border-color: var(--primary-blue);
+            box-shadow: 0 12px 20px -10px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Hover Effect for Dual Images */
+        .img-primary, .img-mockup {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.5s ease;
+            display: none; 
+        }
+
+        .img-mockup { opacity: 0; }
+        .image-frame:hover .img-primary { opacity: 0; }
+        .image-frame:hover .img-mockup { opacity: 1; }
+
+        .mockup-not-present .img-primary { opacity: 1 !important; }
+
+        .logo-box {
+            width: 220px;
+            height: 220px;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .logo-box:hover {
+            transform: scale(1.05);
+        }
+
+        .logo-box #logo-placeholder {
+            border: 2px dashed rgba(0,0,0,0.1);
+            border-radius: 1rem;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(37, 99, 235, 0.85);
+            color: white;
+            padding: 8px;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 10;
+        }
+
+        .image-frame:hover .upload-overlay, .logo-box:hover .upload-overlay {
+            opacity: 1;
+        }
+
+        .mockup-upload-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 32px;
+            height: 32px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 20;
+            opacity: 0.6;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .mockup-upload-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .label-tag {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        #status-indicator {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            background: white;
+            font-weight: 700;
+            font-size: 0.75rem;
+            display: none;
+            z-index: 100;
+        }
+
+        .loader {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-blue);
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- ADVANCED PRINT FIXES --- */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0.5cm; /* Reduced page margins */
+            }
+            body {
+                background-color: var(--brand-yellow) !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                padding: 10px !important; /* Minimal padding */
+            }
+            .max-w-6xl {
+                max-width: 100% !important;
+                margin: 0 !important;
+            }
+            header {
+                margin-bottom: 1.5rem !important; /* Tightened header space */
+            }
+            /* Force 3 columns in print if on desktop width */
+            .grid-cols-1.sm\:grid-cols-3 {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 15px !important;
+            }
+            .section-card {
+                break-inside: avoid;
+                box-shadow: none !important;
+                border: 2px solid #f0f0f0;
+                margin-bottom: 1rem !important; /* Heavily reduced gap between cards */
+                padding: 1.25rem !important; /* Tighter internal padding */
+            }
+            .section-header {
+                margin-bottom: 1rem !important; /* Tighter header */
+            }
+            .upload-overlay, 
+            .mockup-upload-btn, 
+            #status-indicator, 
+            .export-btn,
+            #logo-placeholder,
+            [id^="placeholder-"],
+            footer {
+                display: none !important;
+            }
+            .image-frame {
+                border: none !important;
+                background-color: #ffffff !important;
+                box-shadow: none !important;
+                margin-bottom: 0 !important;
+            }
+            /* Ensure images actually show up */
+            .img-primary {
+                display: block !important;
+                opacity: 1 !important;
+                position: relative !important;
+            }
+            .img-mockup {
+                display: none !important;
+            }
+            .logo-box {
+                cursor: default;
+                width: 150px !important; /* Smaller logo in print */
+                height: 150px !important;
+            }
+            h1 {
+                font-size: 2rem !important; /* Smaller title in print */
+            }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-12">
+
+    <div id="status-indicator" class="card-shadow">
+        <span class="loader"></span> Syncing...
+    </div>
+
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-12 flex flex-col md:flex-row items-center gap-6 md:gap-10 text-center md:text-left">
+            <div class="relative group">
+                <label for="logo-input">
+                    <div class="logo-box" id="logo-container">
+                        <div id="logo-placeholder" class="text-center p-2">
+                            <div class="text-4xl mb-2 opacity-30">🏷️</div>
+                            <p class="text-[10px] font-bold text-gray-600 uppercase tracking-widest leading-tight">Brand Logo<br>(PNG)</p>
+                        </div>
+                        <img id="logo-preview" src="logo.png" alt="Brand Logo" 
+                             style="display: none;" 
+                             class="w-full h-full object-contain p-1" 
+                             onload="this.style.display='block'; document.getElementById('logo-placeholder').style.display='none';"
+                             onerror="this.style.display='none'; document.getElementById('logo-placeholder').style.display='flex';">
+                        <div class="upload-overlay">Upload Logo</div>
+                    </div>
+                </label>
+                <input type="file" id="logo-input" accept="image/*" onchange="handleLogoUpload(event)">
+            </div>
+
+            <div class="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 mb-0 tracking-tight uppercase">APP IP Costumes</h1>
+            </div>
+        </header>
+
+        <div id="showcase-content">
+            <!-- Sections will be injected here by JavaScript -->
+        </div>
+
+        <!-- Bottom Export Button Container -->
+        <div class="mt-8 mb-12 flex justify-center">
+            <button onclick="window.print()" class="export-btn bg-white text-blue-700 font-bold py-4 px-10 rounded-2xl shadow-xl hover:bg-blue-50 transition-all hover:scale-105 flex items-center gap-3">
+                <span class="text-2xl">📄</span> Export Final PDF
+            </button>
+        </div>
+
+        <footer class="mt-20 border-t border-yellow-500">
+        </footer>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // Configuration
+        const sections = [
+            {
+                title: "Final Designs",
+                id: "final",
+                items: [
+                    { id: "final-joy", label: "Costume 1", localFile: "final-joy.png", localMockup: "final-joy-mockup.png" },
+                    { id: "final-khushi", label: "Costume 2", localFile: "final-khushi.png", localMockup: "final-khushi-mockup.png" },
+                    { id: "final-donna", label: "Costume 3", localFile: "final-donna.png", localMockup: "final-donna-mockup.png" }
+                ]
+            },
+            {
+                title: "Solid Colour Versions",
+                id: "solid",
+                items: [
+                    { id: "solid-joy", label: "Solid Colour 1", localFile: "solid-joy.png", localMockup: "solid-joy-mockup.png" },
+                    { id: "solid-khushi", label: "Solid Colour 2", localFile: "solid-khushi.png", localMockup: "solid-khushi-mockup.png" },
+                    { id: "solid-donna", label: "Solid Colour 3", localFile: "solid-donna.png", localMockup: "solid-donna-mockup.png" }
+                ]
+            },
+            {
+                title: "Other versions",
+                id: "colorchange",
+                items: [
+                    { id: "cc-joy", label: "IP Option 1", localFile: "cc-joy.png", localMockup: "cc-joy-mockup.png" },
+                    { id: "cc-khushi", label: "IP Option 2", localFile: "cc-khushi.png", localMockup: "cc-khushi-mockup.png" },
+                    { id: "cc-donna", label: "IP Option 3", localFile: "cc-donna.png", localMockup: "cc-donna-mockup.png" }
+                ]
+            }
+        ];
+
+        // UI State
+        let db, auth, appId, currentUser;
+        const statusEl = document.getElementById('status-indicator');
+
+        // Persistence Logic
+        async function saveData(docId, base64Data) {
+            if (!currentUser || !db) return;
+            statusEl.style.display = 'block';
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'outfits', docId);
+                await setDoc(docRef, { content: base64Data, timestamp: Date.now() });
+            } catch (error) {
+                console.error("Error saving design:", error);
+            } finally {
+                setTimeout(() => { statusEl.style.display = 'none'; }, 1000);
+            }
+        }
+
+        // Global handlers
+        window.handleLogoUpload = async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const base64 = e.target.result;
+                    const logoImg = document.getElementById('logo-preview');
+                    const placeholder = document.getElementById('logo-placeholder');
+                    if (logoImg) {
+                        logoImg.src = base64;
+                        logoImg.style.display = 'block';
+                        placeholder.style.display = 'none';
+                    }
+                    await saveData('brand-logo', base64);
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        window.handleImageUpload = async (event, id, isMockup = false) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const base64 = e.target.result;
+                    const storageId = isMockup ? `${id}-mockup` : id;
+                    const imgElement = document.getElementById(isMockup ? `mock-${id}` : `img-${id}`);
+                    const placeholder = document.getElementById(`placeholder-${id}`);
+                    const frame = document.getElementById(`frame-${id}`);
+                    
+                    if (imgElement) {
+                        imgElement.src = base64;
+                        imgElement.style.display = 'block';
+                        if (!isMockup && placeholder) placeholder.style.display = 'none';
+                        if (isMockup) frame.classList.remove('mockup-not-present');
+                    }
+                    await saveData(storageId, base64);
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        function renderShowcase() {
+            const container = document.getElementById('showcase-content');
+            if (!container) return;
+            container.innerHTML = ''; 
+            
+            sections.forEach(section => {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'section-card card-shadow';
+                
+                let cardsHtml = '';
+                section.items.forEach(item => {
+                    cardsHtml += `
+                        <div class="flex flex-col items-center relative">
+                            <div class="w-full relative group">
+                                <label for="input-${item.id}" class="w-full block">
+                                    <div class="image-frame card-shadow mockup-not-present" id="frame-${item.id}">
+                                        <div id="placeholder-${item.id}" class="text-center p-4 z-0">
+                                            <div class="text-3xl mb-2 opacity-40">📸</div>
+                                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                                No Image
+                                            </p>
+                                        </div>
+
+                                        <img id="img-${item.id}" src="${item.localFile}" 
+                                             class="img-primary" 
+                                             onload="this.style.display='block'; document.getElementById('placeholder-${item.id}').style.display='none';"
+                                             onerror="this.style.display='none';">
+
+                                        <img id="mock-${item.id}" src="${item.localMockup}" 
+                                             class="img-mockup"
+                                             onload="this.style.display='block'; document.getElementById('frame-${item.id}').classList.remove('mockup-not-present');"
+                                             onerror="this.style.display='none';">
+                                        
+                                        <div class="upload-overlay">Change Primary View</div>
+                                    </div>
+                                </label>
+
+                                <label for="mock-input-${item.id}" class="mockup-upload-btn cursor-pointer" title="Upload Mockup (Hover View)">
+                                    <span class="text-xs font-bold">✨</span>
+                                </label>
+                            </div>
+
+                            <input type="file" id="input-${item.id}" accept="image/*" onchange="handleImageUpload(event, '${item.id}', false)">
+                            <input type="file" id="mock-input-${item.id}" accept="image/*" onchange="handleImageUpload(event, '${item.id}', true)">
+                            
+                            <div class="mt-4 text-center">
+                                <span class="label-tag mb-1 inline-block">${item.label}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                sectionDiv.innerHTML = `
+                    <div class="section-header">
+                        <h2 class="text-3xl md:text-4xl font-extrabold text-blue-700">${section.title}</h2>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-10">
+                        ${cardsHtml}
+                    </div>
+                `;
+                container.appendChild(sectionDiv);
+            });
+        }
+
+        // --- Execution ---
+        renderShowcase();
+
+        const initFirebase = async () => {
+            try {
+                const configStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+                const firebaseConfig = JSON.parse(configStr);
+                if (!firebaseConfig.apiKey) return;
+                
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'outfit-showcase-v1';
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    currentUser = user;
+                    if (user) {
+                        const outfitsCol = collection(db, 'artifacts', appId, 'public', 'data', 'outfits');
+                        onSnapshot(outfitsCol, (snapshot) => {
+                            snapshot.forEach((doc) => {
+                                const data = doc.data();
+                                const docId = doc.id;
+                                
+                                if (docId === 'brand-logo') {
+                                    const logoImg = document.getElementById('logo-preview');
+                                    const placeholder = document.getElementById('logo-placeholder');
+                                    if (logoImg && data.content) {
+                                        logoImg.src = data.content;
+                                        logoImg.style.display = 'block';
+                                        placeholder.style.display = 'none';
+                                    }
+                                } else {
+                                    const isMockup = docId.endsWith('-mockup');
+                                    const baseId = isMockup ? docId.replace('-mockup', '') : docId;
+                                    const imgElement = document.getElementById(isMockup ? `mock-${baseId}` : `img-${baseId}`);
+                                    const placeholder = document.getElementById(`placeholder-${baseId}`);
+                                    const frame = document.getElementById(`frame-${baseId}`);
+
+                                    if (imgElement && data.content) {
+                                        imgElement.src = data.content;
+                                        imgElement.style.display = 'block';
+                                        if (!isMockup && placeholder) placeholder.style.display = 'none';
+                                        if (isMockup && frame) frame.classList.remove('mockup-not-present');
+                                    }
+                                }
+                            });
+                        }, (err) => console.error("Snapshot error:", err));
+                    }
+                });
+            } catch (e) {
+                console.error("Firebase init failed:", e);
+            }
+        };
+
+        initFirebase();
+    </script>
+</body>
+</html>
